@@ -15,6 +15,9 @@ pub struct GreetingAccount {
     pub counter: u32,
 }
 
+pub mod instruction;
+use crate::instruction::HelloInstruction;
+
 // Declare and export the program's entrypoint
 entrypoint!(process_instruction);
 
@@ -22,9 +25,10 @@ entrypoint!(process_instruction);
 pub fn process_instruction(
     program_id: &Pubkey, // Public key of the account the hello world program was loaded into
     accounts: &[AccountInfo], // The account to say hello to
-    _instruction_data: &[u8], // Ignored, all helloworld instructions are hellos
+    instruction_data: &[u8], // Ignored, all helloworld instructions are hellos
 ) -> ProgramResult {
     msg!("Hello World Rust program entrypoint");
+    let instruction = HelloInstruction::unpack(instruction_data)?;
 
     // Iterating accounts is safer than indexing
     let accounts_iter = &mut accounts.iter();
@@ -40,9 +44,19 @@ pub fn process_instruction(
 
     // Increment and store the number of times the account has been greeted
     let mut greeting_account = GreetingAccount::try_from_slice(&account.data.borrow())?;
-    greeting_account.counter += 1;
-    greeting_account.serialize(&mut &mut account.data.borrow_mut()[..])?;
+    match instruction {
+        HelloInstruction::Increment => {
+            greeting_account.counter += 1;
+        }
+        HelloInstruction::Decrement => {
+            greeting_account.counter -=1;
+        }
+        HelloInstruction::Set(val) => {
+            greeting_account.counter += val;
+        }
+    }
 
+    greeting_account.serialize(&mut &mut account.data.borrow_mut()[..])?;
     msg!("Greeted {} time(s)!", greeting_account.counter);
 
     Ok(())
