@@ -7,6 +7,8 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
 };
+pub mod instructions;
+use crate::instructions::HelloInstruction;
 
 /// Define the type of state stored in accounts
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -14,9 +16,6 @@ pub struct GreetingAccount {
     /// number of greetings
     pub counter: u32,
 }
-
-pub mod instruction;
-use crate::instruction::HelloInstruction;
 
 // Declare and export the program's entrypoint
 entrypoint!(process_instruction);
@@ -50,9 +49,6 @@ pub fn process_instruction(
         }
         HelloInstruction::Decrement => {
             greeting_account.counter -=1;
-        }
-        HelloInstruction::Set(val) => {
-            greeting_account.counter += val;
         }
     }
 
